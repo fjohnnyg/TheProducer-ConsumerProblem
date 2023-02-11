@@ -1,22 +1,37 @@
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Chef implements Runnable {
 
-    private Deque<Plates> deque;
     private int platesAmount;
     private Restaurant restaurant;
+    private String name;
 
-    public Chef (Deque<Plates> deque, int platesAmount, Restaurant restaurant) {
-        this.deque = deque;
+    public Chef (int platesAmount, Restaurant restaurant, String name) {
         this.platesAmount = platesAmount;
         this.restaurant = restaurant;
+        this.name = name;
     }
 
     @Override
     public void run() {
-        Plates plate = cookSomething();
-        restaurant.send(plate);
+        while (platesAmount > 0) {
+            if (restaurant.getMaxNumOfPlates() == restaurant.getDeque().size()) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            Plates plate = cookSomething();
+            restaurant.send(plate);
+//            System.out.println(getName() + " cooked a " + plate);
+            platesAmount--;
+            try {
+                Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 2000));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private Plates cookSomething() {
@@ -45,5 +60,11 @@ public class Chef implements Runnable {
         return plate;
     }
 
+    public String getName() {
+        return name;
+    }
 
+    public int getChefPlatesAmount() {
+        return platesAmount;
+    }
 }

@@ -1,54 +1,79 @@
+import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class Restaurant {
 
     private Deque<Plates> deque;
-    boolean flag = true;
-    private Plates plate;
+    boolean chefFlag = true;
+    boolean clientFlag = false;
+    final private int maxNumOfPlates;
 
-    public Restaurant(Deque<Plates> deque) {
-        this.deque = deque;
+    public Restaurant(int maxNumOfPlates) {
+        this.deque = new ArrayDeque<>(maxNumOfPlates);
+        this.maxNumOfPlates = maxNumOfPlates;
     }
 
 
-    private int checkNumOfPlates() {
+/*    private int checkNumOfPlates() {
         int numOfPlates = 0;
         for (int i = 0; i < deque.size(); i++) {
             if (deque.element() != null)
                 numOfPlates++;
         }
         return numOfPlates;
-    }
+    }*/
 
-    private void setFlag () {
-        if (deque.size() == checkNumOfPlates())
-            flag = true;
-        if (checkNumOfPlates() == 0)
-            flag = false;
+    private void setChefFlag() {
+        chefFlag = deque.size() != maxNumOfPlates;
+    }
+    private  void  setClientFlag() {
+        clientFlag = !deque.isEmpty();
     }
     public synchronized void send (Plates plate) {
-        while (flag == false) {
+        while (!chefFlag) {
             try {
                 wait();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
-        deque.add(plate);
-        setFlag();
+        deque.addLast(plate);
+        System.out.println(Thread.currentThread().getName() + " cooked " + plate);
+        System.out.println(this.deque);
+        setChefFlag();
         notifyAll();
     }
 
-    public synchronized void receive() {
-        while (flag == true) {
+    public synchronized Plates receive() {
+        Plates plateReceived;
+        while (!clientFlag) {
             try {
                 wait();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            deque.pollLast();
-            setFlag();
-            notifyAll();
+        setClientFlag();
         }
+        plateReceived = deque.removeFirst();
+        System.out.println(Thread.currentThread().getName() + " ate " + plateReceived);
+        System.out.println(this.deque);
+        setClientFlag();
+        notifyAll();
+        return plateReceived;
+    }
+
+    public Deque<Plates> getDeque() {
+        return deque;
+    }
+
+    public int getMaxNumOfPlates() {
+        return maxNumOfPlates;
+    }
+
+    @Override
+    public String toString() {
+        return "Restaurant{" +
+                "deque=" + deque +
+                '}';
     }
 }
