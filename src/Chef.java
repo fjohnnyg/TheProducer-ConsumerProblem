@@ -4,27 +4,17 @@ public class Chef implements Runnable {
 
     private int platesAmount;
     private Restaurant restaurant;
-    private String name;
 
-    public Chef (int platesAmount, Restaurant restaurant, String name) {
+    public Chef(int platesAmount, Restaurant restaurant) {
         this.platesAmount = platesAmount;
         this.restaurant = restaurant;
-        this.name = name;
     }
 
     @Override
     public void run() {
         while (platesAmount > 0) {
-            if (restaurant.getMaxNumOfPlates() == restaurant.getDeque().size()) {
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
             Plates plate = cookSomething();
             restaurant.send(plate);
-//            System.out.println(getName() + " cooked a " + plate);
             platesAmount--;
             try {
                 Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 2000));
@@ -58,13 +48,5 @@ public class Chef implements Runnable {
                 break;
         }
         return plate;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public int getChefPlatesAmount() {
-        return platesAmount;
     }
 }
